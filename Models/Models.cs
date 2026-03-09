@@ -1,0 +1,33 @@
+namespace UUPDumpWPF.Models
+{
+    public class Build
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public string BuildNumber { get; set; } = string.Empty;
+        public bool IsRetail { get; set; }
+        public string Ring { get; set; } = string.Empty;
+        public string Architecture { get; set; } = string.Empty;
+    }
+
+    public class Language
+    {
+        public string Code { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+    }
+
+    public class Edition
+    {
+        public string Code { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+    }
+
+    public class WindowsVersion
+    {
+        public string Build { get; set; } = string.Empty;
+        public string Version { get; set; } = string.Empty;
+        public string Edition { get; set; } = string.Empty;
+        public string Product { get; set; } = string.Empty;
+        public string FullVersion { get; set; } = string.Empty;
+    }
+}

@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UUPDumpWPF", "UUPDumpWPF.csproj", "{6A65D5DD-D06D-DD6D-1724-416052FB13EA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6A65D5DD-D06D-DD6D-1724-416052FB13EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6A65D5DD-D06D-DD6D-1724-416052FB13EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6A65D5DD-D06D-DD6D-1724-416052FB13EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6A65D5DD-D06D-DD6D-1724-416052FB13EA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {49C2CA74-77E4-452F-BCF6-6EDD3363206D}
+	EndGlobalSection
+EndGlobal
