@@ -54,3 +54,9 @@ UUPDumpWPF/
 - `https://api.uupdump.net/listid.php` - Liste des builds
 - `https://api.uupdump.net/listlangs.php` - Langues disponibles
 - `https://api.uupdump.net/listeditions.php` - Éditions disponibles
+
+## Credits
+
+- abbodi1406 `https://git.uupdump.net/abbodi1406`
+- Kaenbyou Rin `https://git.uupdump.net/orin`
+
