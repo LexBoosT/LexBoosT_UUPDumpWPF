@@ -6,7 +6,6 @@ namespace UUPDumpWPF.Models
         public string Title { get; set; } = string.Empty;
         public string BuildNumber { get; set; } = string.Empty;
         public bool IsRetail { get; set; }
-        public string Ring { get; set; } = string.Empty;
         public string Architecture { get; set; } = string.Empty;
     }
 
@@ -25,9 +24,6 @@ namespace UUPDumpWPF.Models
     public class WindowsVersion
     {
         public string Build { get; set; } = string.Empty;
-        public string Version { get; set; } = string.Empty;
-        public string Edition { get; set; } = string.Empty;
-        public string Product { get; set; } = string.Empty;
         public string FullVersion { get; set; } = string.Empty;
     }
 }

@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using System.Web;
@@ -14,7 +13,6 @@ namespace UUPDumpWPF.Services
     public class UUPDumpService
     {
         private readonly HttpClient _httpClient;
-        private readonly JsonSerializerOptions _jsonOptions;
         private readonly ConcurrentDictionary<string, string> _archCache;
 
         public UUPDumpService()
@@ -22,10 +20,6 @@ namespace UUPDumpWPF.Services
             _httpClient = new HttpClient
             {
                 Timeout = TimeSpan.FromSeconds(15)
-            };
-            _jsonOptions = new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
             };
             _archCache = new ConcurrentDictionary<string, string>();
         }
@@ -46,7 +40,7 @@ namespace UUPDumpWPF.Services
                 }
 
                 var buildsNode = json["response"]!["builds"]!;
-                var buildList = new List<(string Id, string Title, string BuildNumber, bool IsRetail, string Ring)>();
+                var buildList = new List<(string Id, string Title, string BuildNumber, bool IsRetail)>();
 
                 foreach (var property in buildsNode.AsObject())
                 {
@@ -55,14 +49,12 @@ namespace UUPDumpWPF.Services
 
                     var title = buildData["title"]?.ToString() ?? "";
                     var isRetail = !title.Contains("Preview", StringComparison.OrdinalIgnoreCase);
-                    var ring = buildData["ring"]?.ToString() ?? "UNKNOWN";
 
                     buildList.Add((
                         Id: buildData["uuid"]?.ToString() ?? "",
                         Title: title,
                         BuildNumber: buildData["build"]?.ToString() ?? "",
-                        IsRetail: isRetail,
-                        Ring: ring
+                        IsRetail: isRetail
                     ));
                 }
 
@@ -76,8 +68,14 @@ namespace UUPDumpWPF.Services
                     return 0;
                 }).Take(50).ToList();
 
+                // Remove duplicates based on BuildNumber (keep first occurrence of each build number)
+                var uniqueBuilds = sortedBuilds
+                    .GroupBy(b => b.BuildNumber)
+                    .Select(g => g.First())
+                    .ToList();
+
                 // Fetch architectures in parallel
-                var architectureTasks = sortedBuilds.Select(async b =>
+                var architectureTasks = uniqueBuilds.Select(async b =>
                 {
                     if (_archCache.TryGetValue(b.Id, out var cachedArch))
                         return (b, Architecture: cachedArch);
@@ -95,7 +93,6 @@ namespace UUPDumpWPF.Services
                     Title = r.b.Title,
                     BuildNumber = r.b.BuildNumber,
                     IsRetail = r.b.IsRetail,
-                    Ring = r.b.Ring,
                     Architecture = r.Architecture
                 }).ToList();
 

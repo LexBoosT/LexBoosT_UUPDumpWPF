@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Linq;
+using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -92,7 +93,7 @@ namespace UUPDumpWPF
             try
             {
                 var version = _versionService.GetCurrentVersion();
-                LblCurrentVersionInfo.Text = $"{version.FullVersion} - Edition: {version.Edition}";
+                LblCurrentVersionInfo.Text = version.FullVersion;
             }
             catch (Exception ex)
             {
@@ -107,58 +108,69 @@ namespace UUPDumpWPF
                 // Get current build number
                 var currentVersion = _versionService.GetCurrentVersion();
                 var currentBuildParts = currentVersion.Build.Split('.');
-                if (!int.TryParse(currentBuildParts[0], out int currentMajor))
+                if (!int.TryParse(currentBuildParts[0], out int currentMajor) || currentBuildParts.Length < 2)
+                    return;
+                if (!int.TryParse(currentBuildParts[1], out int currentMinor))
                     return;
 
                 // Search for newer builds on UUP Dump (fast - only top 50)
                 var builds = await _uupService.GetBuildsAsync("windows 11");
-                
+
                 if (builds.Count == 0)
                     return;
 
-                // Find the highest build number
-                var highestBuild = builds.FirstOrDefault();
+                // Find the highest build number for the same major version
+                Build? highestBuild = null;
+                int highestMinor = -1;
+
+                foreach (var build in builds)
+                {
+                    var buildParts = build.BuildNumber.Split('.');
+                    if (buildParts.Length < 2)
+                        continue;
+
+                    if (!int.TryParse(buildParts[0], out int buildMajor))
+                        continue;
+
+                    // Only consider builds with the same major version
+                    if (buildMajor != currentMajor)
+                        continue;
+
+                    if (!int.TryParse(buildParts[1], out int buildMinor))
+                        continue;
+
+                    // Check if this build has a higher minor version
+                    if (buildMinor > highestMinor)
+                    {
+                        highestMinor = buildMinor;
+                        highestBuild = build;
+                    }
+                }
+
                 if (highestBuild == null)
                     return;
 
-                var highestBuildParts = highestBuild.BuildNumber.Split('.');
-                if (!int.TryParse(highestBuildParts[0], out int highestMajor))
-                    return;
-
-                // Compare builds (only for same major version)
-                if (highestMajor == currentMajor && highestBuild.BuildNumber != currentVersion.Build)
+                // Check if the highest build is newer than current
+                if (highestMinor > currentMinor)
                 {
-                    double currentBuildNum = currentBuildParts.Length >= 2 && 
-                        int.TryParse(currentBuildParts[1], out int currentMinor) 
-                        ? currentMajor + currentMinor / 10000.0 
-                        : currentMajor;
-
-                    double highestBuildNum = highestBuildParts.Length >= 2 && 
-                        int.TryParse(highestBuildParts[1], out int highestMinor) 
-                        ? highestMajor + highestMinor / 10000.0 
-                        : highestMajor;
-
-                    if (highestBuildNum > currentBuildNum)
+                    this.Dispatcher.Invoke(() =>
                     {
-                        this.Dispatcher.Invoke(() =>
-                        {
-                            var result = MessageBox.Show(
-                                $"A newer build is available!\n\n" +
-                                $"Your build: {currentVersion.Build}\n" +
-                                $"Latest build: {highestBuild.BuildNumber}\n\n" +
-                                $"Title: {highestBuild.Title}\n\n" +
-                                $"Would you like to search for this build?",
-                                "New Build Available",
-                                MessageBoxButton.YesNo,
-                                MessageBoxImage.Information);
+                        var result = MessageBox.Show(
+                            $"A newer build is available!\n\n" +
+                            $"Your build: {currentVersion.Build}\n" +
+                            $"Latest build: {highestBuild.BuildNumber}\n\n" +
+                            $"Title: {highestBuild.Title}\n\n" +
+                            $"Would you like to search for this build?",
+                            "New Build Available",
+                            MessageBoxButton.YesNo,
+                            MessageBoxImage.Information);
 
-                            if (result == MessageBoxResult.Yes)
-                            {
-                                TxtSearch.Text = "windows 11";
-                                BtnSearch_Click(null!, null!);
-                            }
-                        });
-                    }
+                        if (result == MessageBoxResult.Yes)
+                        {
+                            TxtSearch.Text = "windows 11";
+                            BtnSearch_Click(null!, null!);
+                        }
+                    });
                 }
             }
             catch
@@ -293,6 +305,48 @@ namespace UUPDumpWPF
             }
         }
 
+        private async void BtnDownloadPack_Click(object sender, RoutedEventArgs e)
+        {
+            if (_selectedBuild == null)
+            {
+                MessageBox.Show("Please select a build first.", "Warning",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (LstLanguages.SelectedIndex < 0)
+            {
+                MessageBox.Show("Please select a language.", "Warning",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (LstEditions.SelectedIndex < 0)
+            {
+                MessageBox.Show("Please select an edition.", "Warning",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var selectedLanguage = _currentLanguages[LstLanguages.SelectedIndex];
+            var selectedEdition = _currentEditions[LstEditions.SelectedIndex];
+
+            var message = $"Build: {_selectedBuild.Title}\n";
+            message += $"Language: {selectedLanguage.Name}\n";
+            message += $"Edition: {selectedEdition.Name}\n\n";
+            message += "This will download the update pack (updateOnly),\n";
+            message += "run uup_download_windows.cmd, copy W10UI files to UUPs,\n";
+            message += "and launch W10UI.cmd.\n\nContinue?";
+
+            var result = MessageBox.Show(message, "Confirmation",
+                MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+            if (result != MessageBoxResult.Yes)
+                return;
+
+            await StartDownloadPackAsync(_selectedBuild, selectedLanguage, selectedEdition);
+        }
+
         private async void BtnDownload_Click(object sender, RoutedEventArgs e)
         {
             if (_selectedBuild == null)
@@ -345,11 +399,334 @@ namespace UUPDumpWPF
             await StartDownloadAsync(_selectedBuild, selectedLanguage, selectedEdition);
         }
 
+        private async Task StartDownloadPackAsync(Build build, Language language, Edition edition)
+        {
+            var destination = TxtDestination.Text;
+            var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+            var tempDir = System.IO.Path.Combine(destination, $"UUP_{build.Id}_{timestamp}");
+
+            try
+            {
+                // Create directories
+                System.IO.Directory.CreateDirectory(destination);
+                if (System.IO.Directory.Exists(tempDir))
+                {
+                    System.IO.Directory.Delete(tempDir, true);
+                }
+                System.IO.Directory.CreateDirectory(tempDir);
+
+                LblStatus.Text = "Downloading package...";
+                LblStatus.Foreground = Brushes.SkyBlue;
+                BtnDownloadPack.IsEnabled = false;
+
+                // Build download URL for update pack only
+                // Must use POST request with autodl=1 parameter
+                var downloadUrl = $"https://uupdump.net/get.php?id={build.Id}&pack=0&edition=updateOnly";
+
+                var zipPath = System.IO.Path.Combine(tempDir, "package.zip");
+
+                // Download with HttpClient using POST
+                using (var httpClient = new System.Net.Http.HttpClient())
+                {
+                    httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
+                    httpClient.DefaultRequestHeaders.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+
+                    // POST with autodl=1 parameter (same as clicking "Create download package for these updates")
+                    var content = new FormUrlEncodedContent(new[]
+                    {
+                        new KeyValuePair<string, string>("autodl", "1")
+                    });
+
+                    var response = await httpClient.PostAsync(downloadUrl, content);
+                    response.EnsureSuccessStatusCode();
+
+                    // Check if we got redirected or received HTML instead of zip
+                    var contentType = response.Content.Headers.ContentType?.MediaType;
+                    if (contentType == "text/html")
+                    {
+                        throw new Exception($"Server returned HTML instead of ZIP. The update pack may not be available for this build.\n\nURL: {downloadUrl}");
+                    }
+
+                    using (var fs = new System.IO.FileStream(zipPath, System.IO.FileMode.Create, System.IO.FileAccess.Write, System.IO.FileShare.None))
+                    {
+                        await response.Content.CopyToAsync(fs);
+                    }
+                }
+
+                // Verify the file is a valid ZIP
+                var fileInfo = new System.IO.FileInfo(zipPath);
+                if (!fileInfo.Exists || fileInfo.Length < 1000)
+                {
+                    throw new Exception("Download failed - file is missing or too small");
+                }
+
+                // Check ZIP magic number
+                using (var zipStream = new System.IO.FileStream(zipPath, System.IO.FileMode.Open, System.IO.FileAccess.Read))
+                {
+                    if (zipStream.Length < 4)
+                    {
+                        throw new Exception("Downloaded file is not a valid ZIP archive");
+                    }
+                    var header = new byte[4];
+                    zipStream.Read(header, 0, 4);
+                    // ZIP files start with PK\x03\x04 (50 4B 03 04)
+                    if (header[0] != 0x50 || header[1] != 0x4B || header[2] != 0x03 || header[3] != 0x04)
+                    {
+                        throw new Exception("Downloaded file is not a valid ZIP archive (invalid header). The update pack may not be available for this build.");
+                    }
+                }
+
+                LblStatus.Text = "Extracting package...";
+
+                // Extract zip
+                System.IO.Compression.ZipFile.ExtractToDirectory(zipPath, tempDir, true);
+                System.IO.File.Delete(zipPath);
+
+                LblStatus.Text = "Processing configuration...";
+
+                // Show app selection dialog if CustomAppsList.txt exists
+                var customAppsListPath = System.IO.Path.Combine(tempDir, "CustomAppsList.txt");
+                if (System.IO.File.Exists(customAppsListPath))
+                {
+                    var selectedApps = ShowAppSelectionDialog(customAppsListPath);
+                    if (selectedApps != null)
+                    {
+                        UpdateCustomAppsList(customAppsListPath, selectedApps);
+                    }
+                }
+
+                // Update ConvertConfig.ini
+                var targetConfig = System.IO.Path.Combine(tempDir, "ConvertConfig.ini");
+                if (System.IO.File.Exists(targetConfig))
+                {
+                    UpdateConvertConfig(targetConfig);
+                }
+
+                LblStatus.Text = "Running uup_download_windows.cmd...";
+                LblStatus.Foreground = Brushes.LightGreen;
+
+                // Run uup_download_windows.cmd
+                var downloaderScript = System.IO.Path.Combine(tempDir, "uup_download_windows.cmd");
+                if (!System.IO.File.Exists(downloaderScript))
+                {
+                    throw new Exception("uup_download_windows.cmd not found in package");
+                }
+
+                var processInfo = new ProcessStartInfo
+                {
+                    FileName = "cmd.exe",
+                    Arguments = $"/c \"uup_download_windows.cmd\"",
+                    WorkingDirectory = tempDir,
+                    UseShellExecute = true,
+                    WindowStyle = ProcessWindowStyle.Normal
+                };
+
+                using (var process = Process.Start(processInfo))
+                {
+                    if (process != null)
+                    {
+                        process.WaitForExit();
+
+                        if (process.ExitCode != 0)
+                        {
+                            throw new Exception($"Download script failed with exit code {process.ExitCode}");
+                        }
+                    }
+                }
+
+                // Wait for UUPs folder to be created
+                LblStatus.Text = "Waiting for UUPs folder...";
+                var uupsFolder = System.IO.Path.Combine(tempDir, "UUPs");
+                var maxWaitTime = TimeSpan.FromMinutes(30);
+                var waitInterval = TimeSpan.FromSeconds(2);
+                var startTime = DateTime.Now;
+
+                while (!System.IO.Directory.Exists(uupsFolder))
+                {
+                    if (DateTime.Now - startTime > maxWaitTime)
+                    {
+                        throw new Exception("Timeout waiting for UUPs folder to be created");
+                    }
+                    await Task.Delay(waitInterval);
+                }
+
+                // Short delay to ensure files are fully written
+                await Task.Delay(2000);
+
+                LblStatus.Text = "Downloading W10UI from GitHub...";
+
+                // Download W10UI files from GitHub repository in parallel
+                var win10uiFolder = System.IO.Path.Combine(tempDir, "W10UI");
+                if (!System.IO.Directory.Exists(win10uiFolder))
+                {
+                    System.IO.Directory.CreateDirectory(win10uiFolder);
+                }
+
+                // Download W10UI files from GitHub repository
+                var w10uiFiles = new[]
+                {
+                    "W10UI.cmd", "W10UI_Extract.cmd", "W10UI_Cleanup.cmd",
+                    "W10UI_Dism.cmd", "W10UI_Servicing.cmd", "W10UI_Appx.cmd",
+                    "W10UI_Features.cmd", "W10UI_Edge.cmd", "W10UI_OneDrive.cmd",
+                    "W10UI_Defender.cmd", "W10UI_Telemetry.cmd", "W10UI_Optimize.cmd",
+                    "W10UI_Registry.cmd", "W10UI_Tasks.cmd", "W10UI_Scripts.cmd",
+                    "W10UI_Functions.cmd", "W10UI_Languages.cmd", "W10UI_Help.cmd"
+                };
+
+                var githubBaseUrl = "https://raw.githubusercontent.com/abbodi1406/BatUtil/master/W10UI/";
+
+                using (var httpClient = new System.Net.Http.HttpClient())
+                {
+                    httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
+
+                    // Download all files in parallel
+                    var downloadTasks = w10uiFiles.Select(async fileName =>
+                    {
+                        try
+                        {
+                            var fileUrl = githubBaseUrl + fileName;
+                            var filePath = System.IO.Path.Combine(win10uiFolder, fileName);
+                            var fileData = await httpClient.GetByteArrayAsync(fileUrl);
+                            await System.IO.File.WriteAllBytesAsync(filePath, fileData);
+                            return true;
+                        }
+                        catch
+                        {
+                            return false;
+                        }
+                    });
+
+                    var results = await Task.WhenAll(downloadTasks);
+                    var downloadedCount = results.Count(r => r);
+
+                    // If no files downloaded, try downloading the main W10UI.cmd only
+                    if (downloadedCount == 0)
+                    {
+                        try
+                        {
+                            var fileUrl = githubBaseUrl + "W10UI.cmd";
+                            var filePath = System.IO.Path.Combine(win10uiFolder, "W10UI.cmd");
+                            var fileData = await httpClient.GetByteArrayAsync(fileUrl);
+                            await System.IO.File.WriteAllBytesAsync(filePath, fileData);
+                            downloadedCount = 1;
+                        }
+                        catch { }
+                    }
+
+                    if (downloadedCount == 0)
+                    {
+                        throw new Exception("Failed to download W10UI files from GitHub");
+                    }
+
+                    LblStatus.Text = $"W10UI files downloaded ({downloadedCount} files). Copying to UUPs...";
+                }
+
+                // Copy all files from W10UI to UUPs
+                foreach (var file in System.IO.Directory.GetFiles(win10uiFolder, "*.*", System.IO.SearchOption.AllDirectories))
+                {
+                    var relativePath = System.IO.Path.GetRelativePath(win10uiFolder, file);
+                    var destFile = System.IO.Path.Combine(uupsFolder, relativePath);
+                    var destDir = System.IO.Path.GetDirectoryName(destFile);
+
+                    if (!string.IsNullOrEmpty(destDir) && !System.IO.Directory.Exists(destDir))
+                    {
+                        System.IO.Directory.CreateDirectory(destDir);
+                    }
+
+                    System.IO.File.Copy(file, destFile, true);
+                }
+
+                // Delete the temporary W10UI folder
+                try
+                {
+                    System.IO.Directory.Delete(win10uiFolder, true);
+                }
+                catch { /* Ignore deletion errors */ }
+
+                LblStatus.Text = "Launching W10UI.cmd...";
+
+                // Find and run W10UI.cmd
+                var w10uiScript = System.IO.Path.Combine(uupsFolder, "W10UI.cmd");
+                if (!System.IO.File.Exists(w10uiScript))
+                {
+                    // Try to find it in subdirectories
+                    var w10uiFilesFound = System.IO.Directory.GetFiles(uupsFolder, "W10UI.cmd", System.IO.SearchOption.AllDirectories);
+                    w10uiScript = w10uiFilesFound.FirstOrDefault() ?? null;
+                }
+
+                if (System.IO.File.Exists(w10uiScript))
+                {
+                    LblStatus.Text = "Ready to install update";
+                    LblStatus.Foreground = Brushes.LightGreen;
+
+                    // Ask user if they want to install the update
+                    var result = MessageBox.Show(
+                        $"W10UI files are ready.\n\nFolder: {tempDir}\n\nDo you want to launch W10UI.cmd to install the update?\n\nClick 'Yes' to launch W10UI.cmd\nClick 'No' to open the folder and exit",
+                        "Install Update",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Question);
+
+                    if (result == MessageBoxResult.Yes)
+                    {
+                        LblStatus.Text = "Launching W10UI.cmd...";
+
+                        var w10uiProcessInfo = new ProcessStartInfo
+                        {
+                            FileName = "cmd.exe",
+                            Arguments = $"/c \"cd /d \"{System.IO.Path.GetDirectoryName(w10uiScript)}\" && W10UI.cmd\"",
+                            UseShellExecute = true,
+                            WindowStyle = ProcessWindowStyle.Normal
+                        };
+
+                        using (var w10uiProcess = Process.Start(w10uiProcessInfo))
+                        {
+                            if (w10uiProcess != null)
+                            {
+                                w10uiProcess.WaitForExit();
+
+                                if (w10uiProcess.ExitCode != 0)
+                                {
+                                    throw new Exception($"W10UI.cmd failed with exit code {w10uiProcess.ExitCode}");
+                                }
+                            }
+                        }
+
+                        LblStatus.Text = "W10UI completed successfully!";
+                        LblStatus.Foreground = Brushes.LightGreen;
+
+                        MessageBox.Show(
+                            $"Update installation completed successfully!\n\nFolder: {tempDir}",
+                            "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                    else
+                    {
+                        // Open folder and exit
+                        System.Diagnostics.Process.Start("explorer.exe", tempDir);
+                        Application.Current.Shutdown();
+                    }
+                }
+                else
+                {
+                    throw new Exception("W10UI.cmd not found in UUPs folder");
+                }
+            }
+            catch (Exception ex)
+            {
+                LblStatus.Text = "Download pack failed";
+                LblStatus.Foreground = Brushes.OrangeRed;
+                MessageBox.Show($"Download pack failed: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                BtnDownloadPack.IsEnabled = true;
+            }
+        }
+
         private async Task StartDownloadAsync(Build build, Language language, Edition edition)
         {
             var destination = TxtDestination.Text;
             var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-            var buildTitle = new string(build.Title.Where(c => char.IsLetterOrDigit(c) || c == '-' || c == '_').ToArray());
             var tempDir = System.IO.Path.Combine(destination, $"UUP_{build.Id}_{timestamp}");
 
             try
@@ -507,7 +884,7 @@ namespace UUPDumpWPF
 
         private List<string> ShowAppSelectionDialog(string customAppsListPath)
         {
-            var apps = new List<(string Code, string Name, string FullName, bool Selected)>();
+            var apps = new List<(string Name, string FullName, bool Selected)>();
             var inClientSection = false;
 
             var lines = System.IO.File.ReadAllLines(customAppsListPath);
@@ -534,11 +911,10 @@ namespace UUPDumpWPF
 
                     var appName = isCommented ? trimmedLine.Substring(1).Trim() : trimmedLine;
 
-                    if (appName.Contains(".") && appName.Contains("_") && 
+                    if (appName.Contains(".") && appName.Contains("_") &&
                         System.Text.RegularExpressions.Regex.IsMatch(appName, @"^[A-Za-z0-9_.]+$"))
                     {
-                        var appCode = appName.Split('_')[0];
-                        apps.Add((appCode, appName, appName, !isCommented));
+                        apps.Add((Name: appName, FullName: appName, Selected: !isCommented));
                     }
                 }
             }
