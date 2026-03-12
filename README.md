@@ -2,63 +2,62 @@
 
 <img width="1361" height="995" alt="Capture d&#39;écran 2026-03-09 031310" src="https://github.com/user-attachments/assets/9264e0da-1c2c-4913-bf3c-cfed0019fa56" />
 
-Application WPF en C# avec thème sombre et effet Mica pour télécharger des ISO Windows via UUP Dump.
+WPF application in C# with dark theme and Mica effect for downloading Windows ISOs via UUP Dump.
 
-## Prérequis
+## Prerequisites
 
-- **.NET 8.0 SDK** ou supérieur
-- **Windows 10/11** (l'effet Mica nécessite Windows 11)
+- **.NET 8.0 SDK** or higher
+- **Windows 10/11** (Mica effect requires Windows 11)
 
-## Build et Exécution
+## Build and Run
 
 ```bash
-# Restaurer les packages
+# Restore packages
 dotnet restore
 
 # Build
 dotnet build
 
-# Exécuter
+# Run
 dotnet run
 ```
 
-## Fonctionnalités
+## Features
 
-- **Recherche de builds** : Recherchez des builds Windows via l'API UUP Dump
-- **Filtres** : Filtrez par type (Retail/Preview) et architecture (amd64/arm64)
-- **Sélection de langue** : Choisissez la langue de l'ISO
-- **Sélection d'édition** : Choisissez l'édition Windows (Home, Pro, etc.)
-- **Options de téléchargement** :
+- **Build Search**: Search for Windows builds via UUP Dump API
+- **Filters**: Filter by type (Retail/Preview) and architecture (amd64/arm64)
+- **Language Selection**: Choose the ISO language
+- **Edition Selection**: Choose Windows edition (Home, Pro, etc.)
+- **Download Options**:
   - Include Updates
   - Cleanup
   - .NET 3.5
   - ESD Compression (Solid)
-- **Effet Mica** : Thème moderne avec transparence sur Windows 11
-- **Thème sombre** : Interface sombre pour un confort visuel optimal
+- **Mica Effect**: Modern theme with transparency on Windows 11
+- **Dark Theme**: Dark interface for optimal visual comfort
 
-## Structure du projet
+## Project Structure
 
 ```
 UUPDumpWPF/
 ├── Models/
-│   └── Models.cs          # Classes de données (Build, Language, Edition)
+│   └── Models.cs          # Data classes (Build, Language, Edition)
 ├── Services/
-│   ├── UUPDumpService.cs  # Service API UUP Dump
-│   └── WindowsVersionService.cs  # Informations version Windows
-├── App.xaml               # Ressources et styles globaux
-├── MainWindow.xaml        # Interface utilisateur
-├── MainWindow.xaml.cs     # Logique métier
-└── UUPDumpWPF.csproj      # Projet .NET
+│   ├── UUPDumpService.cs  # UUP Dump API Service
+│   └── WindowsVersionService.cs  # Windows version information
+├── App.xaml               # Global resources and styles
+├── MainWindow.xaml        # User interface
+├── MainWindow.xaml.cs     # Business logic
+└── UUPDumpWPF.csproj      # .NET Project
 ```
 
-## API Utilisée
+## APIs Used
 
-- `https://api.uupdump.net/listid.php` - Liste des builds
-- `https://api.uupdump.net/listlangs.php` - Langues disponibles
-- `https://api.uupdump.net/listeditions.php` - Éditions disponibles
+- `https://api.uupdump.net/listid.php` - Build list
+- `https://api.uupdump.net/listlangs.php` - Available languages
+- `https://api.uupdump.net/listeditions.php` - Available editions
 
 ## Credits
 
 - abbodi1406 `https://git.uupdump.net/abbodi1406`
 - Kaenbyou Rin `https://git.uupdump.net/orin`
-
