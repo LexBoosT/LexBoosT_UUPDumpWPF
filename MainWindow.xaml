@@ -1,290 +1,671 @@
-<Window x:Class="UUPDumpWPF.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="LexBoosT UUP Dump ISO Downloader v1.1"
-        Height="900" Width="1200"
-        MinHeight="800" MinWidth="1100"
-        WindowStyle="None"
-        Background="Transparent"
-        Icon="Icon.ico">
+<Window
+    x:Class="UUPDumpWPF.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="LexBoosT UUP Dump ISO Downloader v1.2"
+    Width="1200"
+    Height="900"
+    MinWidth="1100"
+    MinHeight="800"
+    Background="Transparent"
+    Icon="Icon.ico"
+    WindowStyle="None">
 
     <WindowChrome.WindowChrome>
-        <WindowChrome CaptionHeight="0"
-                      ResizeBorderThickness="5"
-                      GlassFrameThickness="-1"/>
+        <WindowChrome
+            CaptionHeight="0"
+            GlassFrameThickness="-1"
+            ResizeBorderThickness="5" />
     </WindowChrome.WindowChrome>
 
-    <Border x:Name="MainBorder" Background="Transparent" CornerRadius="8">
+    <Border
+        x:Name="MainBorder"
+        Background="Transparent"
+        CornerRadius="8">
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="40"/>
-                <RowDefinition Height="100"/>
-                <RowDefinition Height="100"/>
-                <RowDefinition Height="280"/>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="140"/>
+                <RowDefinition Height="40" />
+                <RowDefinition Height="100" />
+                <RowDefinition Height="100" />
+                <RowDefinition Height="280" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="140" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <!-- Title Bar -->
-            <Border Grid.Row="0" Background="Transparent" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+            <!--  Title Bar  -->
+            <Border
+                Grid.Row="0"
+                Background="Transparent"
+                MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
                 <Grid>
-                    <TextBlock Text="LexBoosT UUP Dump ISO Downloader v1.1"
-                          Foreground="{StaticResource DarkTextBrush}"
-                          VerticalAlignment="Center" Margin="15,0"
-                          FontSize="14"/>
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Button Content="─" Width="46" Background="Transparent" Foreground="{StaticResource DarkTextBrush}"
-                            BorderThickness="0" Click="MinimizeButton_Click" FontSize="16" FontWeight="Light"
-                            Style="{StaticResource TitleBarButtonStyle}"/>
-                        <Button Content="✕" Width="46" Background="Transparent" Foreground="{StaticResource DarkTextBrush}"
-                            BorderThickness="0" Click="CloseButton_Click" FontSize="14" FontWeight="Bold"
-                            Style="{StaticResource TitleBarButtonStyle}"/>
+                    <TextBlock
+                        Margin="15,0"
+                        VerticalAlignment="Center"
+                        FontSize="14"
+                        Foreground="{StaticResource DarkTextBrush}"
+                        Text="⚡ LexBoosT UUP Dump ISO/Updates Downloader v1.2" >
+                        <TextBlock.Effect>
+                            <DropShadowEffect ShadowDepth="2"/>
+                        </TextBlock.Effect>
+                    </TextBlock>
+                    <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                        <Button
+                            Width="46"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Click="MinimizeButton_Click"
+                            Content="─"
+                            FontSize="16"
+                            FontWeight="Light"
+                            Foreground="{StaticResource DarkTextBrush}"
+                            Style="{StaticResource TitleBarButtonStyle}" />
+                        <Button
+                            Width="46"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Click="CloseButton_Click"
+                            Content="✕"
+                            FontSize="14"
+                            FontWeight="Bold"
+                            Foreground="{StaticResource DarkTextBrush}"
+                            Style="{StaticResource TitleBarButtonStyle}" />
                     </StackPanel>
                 </Grid>
             </Border>
 
-            <!-- Current Windows Version Panel -->
-            <Border Grid.Row="1" Background="#0078D7" Margin="30,30,30,10" MinHeight="80">
+            <!--  Current Windows Version Panel  -->
+            <Border
+                Grid.Row="1"
+                MinHeight="80"
+                Margin="30,10,30,10"
+                Background="#0078D7"
+                BorderBrush="#40FFFFFF"
+                BorderThickness="1"
+                CornerRadius="8">
+                <Border.Effect>
+                    <DropShadowEffect ShadowDepth="2"/>
+                </Border.Effect>
                 <Grid Margin="10,0,10,20">
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="-16,0,-13,0">
-                        <Image Source="logo.png" Width="78" Height="50"/>
-                        <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="Current Windows Version:"
-                                  Foreground="White" FontSize="16" FontWeight="Bold" Width="352"/>
-                            <TextBlock x:Name="LblCurrentVersionInfo"
-                                  Foreground="White" FontSize="13" Margin="0,5,0,0"
-                                  TextWrapping="Wrap"
-                                  Text="Loading..." Width="352"/>
-                        </StackPanel>
-                    </StackPanel>
-                </Grid>
-            </Border>
-
-            <!-- Search Panel -->
-            <Border Grid.Row="2" Background="{StaticResource DarkPanelBrush}" Margin="30,15">
-                <Grid Margin="10,12,10,12">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="320"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
 
-                    <TextBlock Grid.Column="0" Text="Search:" Foreground="{StaticResource DarkTextBrush}"
-                          VerticalAlignment="Top" Margin="0,10,10,0" FontSize="16"/>
+                    <!--  Left side: Logo and Windows Version  -->
+                    <StackPanel
+                        Grid.Column="0"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal">
+                        <Image
+                            Width="78"
+                            Height="50"
+                            Margin="0,0,15,-20"
+                            Source="logo.png" >
+                            <Image.Effect>
+                                <DropShadowEffect ShadowDepth="2"/>
+                            </Image.Effect>
+                        </Image>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock
+                                FontSize="16"
+                                FontWeight="Bold"
+                                Foreground="White"
+                                Text="Current Windows Version:"
+                                TextDecorations="Underline" />
+                            <TextBlock
+                                x:Name="LblCurrentVersionInfo"
+                                Margin="0,5,0,-20"
+                                FontSize="13"
+                                Foreground="White"
+                                Text="Loading..."
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                    </StackPanel>
 
-                    <TextBox x:Name="TxtSearch"
-                        Background="{StaticResource DarkBgBrush}"
+                    <!--  Right side: Powered by UUP Dump  -->
+                    <Border
+                        Grid.Column="1"
+                        Margin="0,0,10,-20"
+                        Padding="15,8"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Background="#80005A9E"
+                        BorderBrush="#40FFFFFF"
+                        BorderThickness="1"
+                        CornerRadius="6">
+                        <TextBlock VerticalAlignment="Center">
+                            <Hyperlink
+                                NavigateUri="https://uupdump.net"
+                                RequestNavigate="Hyperlink_RequestNavigate"
+                                TextDecorations="None">
+                                <Span
+                                    FontSize="14"
+                                    FontWeight="SemiBold"
+                                    Foreground="White">
+                                    ⚡ Powered by <Span FontWeight="Bold" Foreground="#00D4FF">https://uupdump.net</Span>
+                                </Span>
+                            </Hyperlink>
+                        </TextBlock>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!--  Search Panel  -->
+            <Border
+                Grid.Row="2"
+                Margin="30,15,30,14"
+                Background="#802D2D2D"
+                BorderBrush="#40FFFFFF"
+                BorderThickness="1"
+                CornerRadius="8">
+                <Grid Margin="10,12,10,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="320" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" MinWidth="66.359" />
+                        <ColumnDefinition Width="Auto" MinWidth="96.935" />
+                        <ColumnDefinition Width="Auto" MinWidth="92.091" />
+                        <ColumnDefinition Width="Auto" MinWidth="105.268" />
+                        <ColumnDefinition Width="Auto" MinWidth="68" />
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock
+                        Grid.Column="0"
+                        Height="21"
+                        Margin="0,10,10,0"
+                        VerticalAlignment="Top"
+                        FontSize="16"
+                        FontWeight="Bold"
                         Foreground="{StaticResource DarkTextBrush}"
-                        BorderBrush="{StaticResource DarkPanelBrush}" Padding="12,10" FontSize="15" Grid.ColumnSpan="2" HorizontalAlignment="Left" VerticalAlignment="Center" Width="314" Margin="60,0,0,0"/>
+                        Text="Search:"
+                        TextDecorations="Underline" />
 
-                    <Button Grid.Column="2" x:Name="BtnSearch"
-                       BorderThickness="0"
-                       Padding="30,14"
-                       Margin="10,-10,26,-10" Click="BtnSearch_Click" Cursor="Hand"
-                       Height="40">
+                    <TextBox
+                        x:Name="TxtSearch"
+                        Grid.ColumnSpan="2"
+                        Width="314"
+                        Height="42"
+                        Margin="60,0,0,0"
+                        Padding="12,10"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center"
+                        Background="{StaticResource DarkBgBrush}"
+                        BorderBrush="{StaticResource DarkPanelBrush}"
+                        FontSize="15"
+                        Foreground="{StaticResource DarkTextBrush}">
+                        <TextBox.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="8" />
+                            </Style>
+                        </TextBox.Resources>
+                    </TextBox>
+
+                    <Button
+                        x:Name="BtnSearch"
+                        Grid.Column="2"
+                        Margin="10,3,26,3"
+                        Padding="30,14"
+                        BorderThickness="0"
+                        Click="BtnSearch_Click"
+                        Cursor="Hand">
                         <Button.Content>
-                            <TextBlock Text="Search" Foreground="White" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" Height="25"/>
+                            <TextBlock
+                                Height="23"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                FontSize="16"
+                                Foreground="White"
+                                Text="Search" />
                         </Button.Content>
                         <Button.Style>
                             <Style TargetType="Button">
-                                <Setter Property="Background" Value="#0078D7"/>
+                                <Setter Property="Background" Value="#0078D7" />
                                 <Setter Property="Template">
                                     <Setter.Value>
                                         <ControlTemplate TargetType="Button">
-                                            <Border Background="{TemplateBinding Background}"
+                                            <Border
+                                                Padding="{TemplateBinding Padding}"
+                                                Background="{TemplateBinding Background}"
                                                 BorderBrush="{TemplateBinding BorderBrush}"
                                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                                Padding="{TemplateBinding Padding}">
-                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                CornerRadius="8">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                                             </Border>
                                         </ControlTemplate>
                                     </Setter.Value>
                                 </Setter>
                                 <Style.Triggers>
                                     <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter Property="Background" Value="#3D3D3D"/>
+                                        <Setter Property="Background" Value="#3D3D3D" />
                                     </Trigger>
                                 </Style.Triggers>
                             </Style>
                         </Button.Style>
                     </Button>
 
-                    <CheckBox Grid.Column="3" x:Name="ChkRetail" Content="Retail"
-                         Foreground="{StaticResource DarkTextBrush}"
-                         IsChecked="True" VerticalAlignment="Center" Margin="0,0,10,0" FontSize="15"/>
+                    <CheckBox
+                        x:Name="ChkRetail"
+                        Grid.Column="2"
+                        Grid.ColumnSpan="2"
+                        Height="14"
+                        Margin="146,0,10,0"
+                        Padding="4,-4,0,0"
+                        VerticalAlignment="Center"
+                        Checked="RetailFilter_Changed"
+                        Content="Retail"
+                        FontSize="15"
+                        Foreground="{DynamicResource AccentBrush}"
+                        IsChecked="True"
+                        Unchecked="RetailFilter_Changed" />
 
-                    <CheckBox Grid.Column="4" x:Name="ChkPreview" Content="Preview"
-                         Foreground="{StaticResource DarkTextBrush}"
-                         VerticalAlignment="Center" Margin="0,0,20,0" FontSize="15"/>
+                    <CheckBox
+                        x:Name="ChkPreview"
+                        Grid.Column="4"
+                        Height="14"
+                        Margin="6,0,20,0"
+                        Padding="4,-4,0,0"
+                        VerticalAlignment="Center"
+                        Checked="RetailFilter_Changed"
+                        Content="Preview"
+                        FontSize="15"
+                        Foreground="{DynamicResource {x:Static SystemColors.ActiveCaptionBrushKey}}"
+                        Unchecked="RetailFilter_Changed" />
 
-                    <TextBlock Grid.Column="5" Text="Arch:" Foreground="{StaticResource DarkTextBrush}"
-                          VerticalAlignment="Center" Margin="0,0,5,0" FontSize="16"/>
+                    <TextBlock
+                        Grid.Column="4"
+                        Grid.ColumnSpan="2"
+                        Height="22"
+                        Margin="91,10,5,0"
+                        VerticalAlignment="Top"
+                        FontSize="16"
+                        FontWeight="Bold"
+                        Foreground="{StaticResource DarkTextBrush}"
+                        Text="Architecture:"
+                        TextDecorations="Underline" />
 
-                    <CheckBox Grid.Column="6" x:Name="ChkAmd64" Content="amd64"
-                         Foreground="{StaticResource DarkTextBrush}"
-                         IsChecked="True" VerticalAlignment="Center" Margin="0,0,10,0" FontSize="15"/>
+                    <CheckBox
+                        x:Name="ChkAmd64"
+                        Grid.Column="6"
+                        Width="72"
+                        Height="14"
+                        Margin="8,0,0,0"
+                        Padding="4,-4,0,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center"
+                        Checked="ArchitectureFilter_Changed"
+                        Content="AMD64"
+                        FontSize="15"
+                        Foreground="{DynamicResource Amd64Brush}"
+                        IsChecked="True"
+                        Unchecked="ArchitectureFilter_Changed" />
 
-                    <CheckBox Grid.Column="7" x:Name="ChkArm64" Content="arm64"
-                         Foreground="{StaticResource DarkTextBrush}"
-                         VerticalAlignment="Center" Margin="0,0,10,0" FontSize="15"/>
+                    <CheckBox
+                        x:Name="ChkArm64"
+                        Grid.Column="7"
+                        Width="68"
+                        Height="14"
+                        Padding="4,-4,0,0"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Checked="ArchitectureFilter_Changed"
+                        Content="ARM64"
+                        FontSize="15"
+                        Foreground="{DynamicResource Arm64Brush}"
+                        IsChecked="True"
+                        Unchecked="ArchitectureFilter_Changed" />
                 </Grid>
             </Border>
 
-            <!-- Builds Panel -->
-            <Border Grid.Row="3" Background="{StaticResource DarkPanelBrush}" Margin="30,15">
+            <!--  Builds Panel  -->
+            <Border
+                Grid.Row="3"
+                Margin="30,15"
+                Background="#802D2D2D"
+                BorderBrush="#40FFFFFF"
+                BorderThickness="1"
+                CornerRadius="8">
                 <Grid>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="30"/>
-                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="30" />
+                        <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Text="Available Builds:" 
-                          Style="{StaticResource SectionHeaderStyle}"
-                          Margin="10,0,0,0"/>
+                    <TextBlock
+                        Grid.Row="0"
+                        Margin="10,0,0,0"
+                        Style="{StaticResource SectionHeaderStyle}"
+                        Text="Available Builds:"
+                        TextDecorations="Underline" />
 
-                    <ListBox Grid.Row="1" x:Name="LstBuilds" 
-                        Style="{StaticResource ListBoxStyle}"
+                    <ListBox
+                        x:Name="LstBuilds"
+                        Grid.Row="1"
+                        Margin="10,0,10,10"
                         SelectionChanged="LstBuilds_SelectionChanged"
-                        Margin="10,0,10,10"/>
+                        Style="{StaticResource ListBoxStyle}">
+                        <ListBox.Template>
+                            <ControlTemplate TargetType="ListBox">
+                                <Border
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="8">
+                                    <ScrollViewer x:Name="ScrollViewer" Padding="{TemplateBinding Padding}">
+                                        <ItemsPresenter />
+                                    </ScrollViewer>
+                                </Border>
+                            </ControlTemplate>
+                        </ListBox.Template>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock
+                                        Margin="0,0,8,0"
+                                        Foreground="{StaticResource DarkTextBrush}"
+                                        Text="{Binding Title}" />
+                                    <TextBlock
+                                        Margin="0,0,8,0"
+                                        FontWeight="Bold"
+                                        Foreground="White">
+                                        <TextBlock.Text>
+                                            <Binding Path="BuildNumber" StringFormat="({0})" />
+                                        </TextBlock.Text>
+                                    </TextBlock>
+                                    <TextBlock FontWeight="Bold" Foreground="{Binding Architecture, Converter={StaticResource ArchitectureColorConverter}}">
+                                        <TextBlock.Text>
+                                            <Binding Converter="{StaticResource ArchitectureTextConverter}" Path="Architecture" />
+                                        </TextBlock.Text>
+                                    </TextBlock>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <TextBlock
+                        Width="22"
+                        Height="23"
+                        Margin="888,-78,0,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        FontSize="16"
+                        FontWeight="Bold"
+                        Foreground="White"
+                        Text="/"
+                        TextWrapping="Wrap" />
                 </Grid>
             </Border>
 
-            <!-- Languages and Editions Panel -->
+            <!--  Languages and Editions Panel  -->
             <Grid Grid.Row="4" Margin="30,15">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="5"/>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="5" />
+                    <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <!-- Languages -->
-                <Border Grid.Column="0" Background="{StaticResource DarkPanelBrush}" Margin="0,0,2,0">
+                <!--  Languages  -->
+                <Border
+                    Grid.Column="0"
+                    Margin="0,0,2,0"
+                    Background="#802D2D2D"
+                    BorderBrush="#40FFFFFF"
+                    BorderThickness="1"
+                    CornerRadius="8">
                     <Grid>
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="30"/>
-                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="30" />
+                            <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
 
-                        <TextBlock Grid.Row="0" Text="Languages:" 
-                              Style="{StaticResource SectionHeaderStyle}"
-                              Margin="10,0,0,0"/>
+                        <TextBlock
+                            Grid.Row="0"
+                            Margin="10,0,0,0"
+                            Style="{StaticResource SectionHeaderStyle}"
+                            Text="Languages:"
+                            TextDecorations="Underline" />
 
-                        <ListBox Grid.Row="1" x:Name="LstLanguages" 
-                            Style="{StaticResource ListBoxStyle}"
+                        <ListBox
+                            x:Name="LstLanguages"
+                            Grid.Row="1"
+                            Margin="10,0,10,10"
                             SelectionChanged="LstLanguages_SelectionChanged"
-                            Margin="10,0,10,10"/>
+                            Style="{StaticResource ListBoxStyle}">
+                            <ListBox.Template>
+                                <ControlTemplate TargetType="ListBox">
+                                    <Border
+                                        Background="{TemplateBinding Background}"
+                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                        CornerRadius="8">
+                                        <ScrollViewer x:Name="ScrollViewer" Padding="{TemplateBinding Padding}">
+                                            <ItemsPresenter />
+                                        </ScrollViewer>
+                                    </Border>
+                                </ControlTemplate>
+                            </ListBox.Template>
+                        </ListBox>
                     </Grid>
                 </Border>
 
-                <!-- GridSplitter -->
-                <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch"
-                         Background="{StaticResource DarkPanelBrush}"/>
+                <!--  GridSplitter  -->
 
-                <!-- Editions -->
-                <Border Grid.Column="2" Background="{StaticResource DarkPanelBrush}" Margin="2,0,0,0">
+                <!--  Editions  -->
+                <Border
+                    Grid.Column="2"
+                    Margin="2,0,0,0"
+                    Background="#802D2D2D"
+                    BorderBrush="#40FFFFFF"
+                    BorderThickness="1"
+                    CornerRadius="8">
                     <Grid>
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="30"/>
-                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="30" />
+                            <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
 
-                        <TextBlock Grid.Row="0" Text="Editions (select one):" 
-                              Style="{StaticResource SectionHeaderStyle}"
-                              Margin="10,0,0,0"/>
+                        <TextBlock
+                            Grid.Row="0"
+                            Margin="10,0,0,0"
+                            Style="{StaticResource SectionHeaderStyle}"
+                            Text="Editions:"
+                            TextDecorations="Underline" />
 
-                        <ListBox Grid.Row="1" x:Name="LstEditions" 
-                            Style="{StaticResource ListBoxStyle}"
+                        <ListBox
+                            x:Name="LstEditions"
+                            Grid.Row="1"
+                            Margin="10,0,10,10"
                             SelectionChanged="LstEditions_SelectionChanged"
-                            Margin="10,0,10,10"/>
+                            Style="{StaticResource ListBoxStyle}">
+                            <ListBox.Template>
+                                <ControlTemplate TargetType="ListBox">
+                                    <Border
+                                        Background="{TemplateBinding Background}"
+                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                        CornerRadius="8">
+                                        <ScrollViewer x:Name="ScrollViewer" Padding="{TemplateBinding Padding}">
+                                            <ItemsPresenter />
+                                        </ScrollViewer>
+                                    </Border>
+                                </ControlTemplate>
+                            </ListBox.Template>
+                        </ListBox>
                     </Grid>
                 </Border>
             </Grid>
 
-            <!-- Download Options Panel -->
-            <Border Grid.Row="5" Background="{StaticResource DarkPanelBrush}" Margin="30,0,30,10">
+            <!--  Download Options Panel  -->
+            <Border
+                Grid.Row="5"
+                Margin="30,13,30,4"
+                Background="#802D2D2D"
+                BorderBrush="#40FFFFFF"
+                BorderThickness="1"
+                CornerRadius="8">
                 <Grid Margin="15">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Text="Download Options:"
-                          Style="{StaticResource SectionHeaderStyle}" Margin="0,0,0,10"/>
+                    <TextBlock
+                        Grid.Row="0"
+                        Margin="0,0,0,10"
+                        Style="{StaticResource SectionHeaderStyle}"
+                        Text="Download Options:"
+                        TextDecorations="Underline" />
 
                     <WrapPanel Grid.Row="1" Margin="0,0,0,10">
-                        <CheckBox x:Name="ChkUpdates" Content="Include Updates"
-                             Foreground="{StaticResource DarkTextBrush}"
-                             IsChecked="True" Margin="0,0,15,0"/>
-                        <CheckBox x:Name="ChkCleanup" Content="Cleanup"
-                             Foreground="{StaticResource DarkTextBrush}"
-                             IsChecked="True" Margin="0,0,15,0"/>
-                        <CheckBox x:Name="ChkNetFx3" Content=".NET 3.5"
-                             Foreground="{StaticResource DarkTextBrush}"
-                             IsChecked="True" Margin="0,0,15,0"/>
-                        <CheckBox x:Name="ChkSolid" Content="ESD Compression (Solid)"
-                             Foreground="{StaticResource DarkTextBrush}"
-                             IsChecked="True" Margin="0,0,15,0"/>
-                        <CheckBox x:Name="ChkSkipEdge" Content="Skip Edge (Uninstall)"
-                             Foreground="{StaticResource DarkTextBrush}"
-                             IsChecked="False"/>
+                        <CheckBox
+                            x:Name="ChkUpdates"
+                            Margin="0,0,15,0"
+                            Content="Include Updates"
+                            Foreground="{StaticResource DarkTextBrush}"
+                            IsChecked="True" />
+                        <CheckBox
+                            x:Name="ChkCleanup"
+                            Margin="0,0,15,0"
+                            Content="Cleanup"
+                            Foreground="{StaticResource DarkTextBrush}"
+                            IsChecked="True" />
+                        <CheckBox
+                            x:Name="ChkNetFx3"
+                            Margin="0,0,15,0"
+                            Content=".NET 3.5"
+                            Foreground="{StaticResource DarkTextBrush}"
+                            IsChecked="True" />
+                        <CheckBox
+                            x:Name="ChkSolid"
+                            Margin="0,0,15,0"
+                            Content="ESD Compression (Solid)"
+                            Foreground="{StaticResource DarkTextBrush}"
+                            IsChecked="True" />
+                        <CheckBox
+                            x:Name="ChkSkipEdge"
+                            Content="Skip Edge (Uninstall)"
+                            Foreground="{StaticResource DarkTextBrush}"
+                            IsChecked="False" />
                     </WrapPanel>
 
                     <Grid Grid.Row="2">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
 
-                        <Button Grid.Column="0" x:Name="BtnDownload" Content="Make ISO"
-                           Style="{StaticResource SuccessButtonStyle}"
-                           Click="BtnDownload_Click" MinWidth="120" MinHeight="35"
-                           Margin="0,0,10,0"/>
+                        <Button
+                            x:Name="BtnDownload"
+                            Grid.Column="0"
+                            MinWidth="120"
+                            MinHeight="35"
+                            Margin="0,0,10,0"
+                            Click="BtnDownload_Click"
+                            Content="Make ISO"
+                            FontWeight="Bold"
+                            Style="{StaticResource SuccessButtonStyle}" />
 
-                        <Button Grid.Column="1" x:Name="BtnDownloadPack" Content="Download Update Only"
-                           Style="{StaticResource ButtonStyle}"
-                           Click="BtnDownloadPack_Click" MinWidth="120" MinHeight="35"
-                           Margin="0,0,20,0"/>
+                        <Button
+                            x:Name="BtnDownloadPack"
+                            Grid.Column="1"
+                            MinWidth="120"
+                            MinHeight="35"
+                            Margin="0,0,20,0"
+                            Click="BtnDownloadPack_Click"
+                            Content="Download Update Only"
+                            FontWeight="Bold"
+                            Style="{StaticResource ButtonStyle}" />
 
                         <Grid Grid.Column="2">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
 
-                            <TextBlock Grid.Column="0" Text="Save to:"
-                                  Foreground="{StaticResource DarkTextBrush}"
-                                  VerticalAlignment="Center" Margin="0,0,10,0" FontWeight="Bold"/>
+                            <TextBlock
+                                Grid.Column="0"
+                                Margin="0,0,10,0"
+                                VerticalAlignment="Center"
+                                FontWeight="Bold"
+                                Foreground="{StaticResource DarkTextBrush}"
+                                Text="Save to:"
+                                TextDecorations="Underline" />
 
-                            <TextBox Grid.Column="1" x:Name="TxtDestination"
-                                    Background="{StaticResource DarkBgBrush}"
-                                    Foreground="{StaticResource DarkTextBrush}"
-                                    BorderBrush="{StaticResource DarkPanelBrush}" Padding="5"
-                                    MinWidth="200" VerticalAlignment="Center"/>
+                            <TextBox
+                                x:Name="TxtDestination"
+                                Grid.Column="1"
+                                MinWidth="200"
+                                Padding="5"
+                                VerticalAlignment="Center"
+                                Background="{StaticResource DarkBgBrush}"
+                                BorderBrush="{StaticResource DarkPanelBrush}"
+                                Foreground="{StaticResource DarkTextBrush}">
+                                <TextBox.Resources>
+                                    <Style TargetType="Border">
+                                        <Setter Property="CornerRadius" Value="8" />
+                                    </Style>
+                                </TextBox.Resources>
+                            </TextBox>
 
-                            <Button Grid.Column="2" x:Name="BtnBrowse" Content="..."
-                                   Style="{StaticResource ButtonStyle}"
-                                   Width="40" Margin="10,0,0,0"
-                                   Click="BtnBrowse_Click" VerticalAlignment="Center"/>
+                            <Button
+                                x:Name="BtnBrowse"
+                                Grid.Column="2"
+                                Width="40"
+                                Margin="10,0,0,0"
+                                VerticalAlignment="Center"
+                                Click="BtnBrowse_Click"
+                                Content="..."
+                                FontWeight="Bold"
+                                Style="{StaticResource ButtonStyle}" />
                         </Grid>
                     </Grid>
                 </Grid>
             </Border>
 
-            <!-- Status Label -->
-            <TextBlock Grid.Row="5" x:Name="LblStatus"
-                  Foreground="LightGreen" VerticalAlignment="Bottom" HorizontalAlignment="Center"
-                  FontSize="14" FontWeight="SemiBold" TextWrapping="Wrap"
-                  Margin="0,0,0,10"/>
+            <!--  Status Label  -->
+            <TextBlock
+                x:Name="LblStatus"
+                Grid.Row="2"
+                Margin="0,0,0,-9"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Bottom"
+                FontSize="14"
+                FontWeight="SemiBold"
+                Foreground="#0078D7"
+                Text="I await your actions..."
+                TextWrapping="Wrap" />
+
+            <!--  Ko-fi Support Link  -->
+            <Border
+                Grid.Row="6"
+                Margin="0,10,0,15"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center">
+                <TextBlock VerticalAlignment="Center">
+                    <Hyperlink
+                        NavigateUri="https://ko-fi.com/lexboostdev"
+                        RequestNavigate="Hyperlink_RequestNavigate"
+                        TextDecorations="None">
+                        <StackPanel Orientation="Horizontal">
+                            <Image
+                                Width="24"
+                                Height="24"
+                                Margin="0,0,8,0"
+                                Source="logomarkLogo.png" />
+                            <TextBlock
+                                FontSize="14"
+                                FontWeight="SemiBold"
+                                Foreground="#FF26ABE0"
+                                Text="Support me on Ko-fi" />
+                        </StackPanel>
+                    </Hyperlink>
+                </TextBlock>
+            </Border>
         </Grid>
     </Border>
 </Window>

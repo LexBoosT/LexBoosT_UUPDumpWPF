@@ -12,6 +12,7 @@
   <ItemGroup>
     <Resource Include="Icon.ico" />
     <Resource Include="logo.png" />
+    <Resource Include="logomarkLogo.png" />
   </ItemGroup>
 
 </Project>

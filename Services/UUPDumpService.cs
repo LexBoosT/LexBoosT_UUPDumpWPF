@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -13,7 +12,6 @@ namespace UUPDumpWPF.Services
     public class UUPDumpService
     {
         private readonly HttpClient _httpClient;
-        private readonly ConcurrentDictionary<string, string> _archCache;
 
         public UUPDumpService()
         {
@@ -21,7 +19,6 @@ namespace UUPDumpWPF.Services
             {
                 Timeout = TimeSpan.FromSeconds(15)
             };
-            _archCache = new ConcurrentDictionary<string, string>();
         }
 
         public async Task<List<Build>> GetBuildsAsync(string searchQuery)
@@ -40,7 +37,7 @@ namespace UUPDumpWPF.Services
                 }
 
                 var buildsNode = json["response"]!["builds"]!;
-                var buildList = new List<(string Id, string Title, string BuildNumber, bool IsRetail)>();
+                var buildList = new List<(string Id, string Title, string BuildNumber, bool IsRetail, string Architecture)>();
 
                 foreach (var property in buildsNode.AsObject())
                 {
@@ -49,12 +46,14 @@ namespace UUPDumpWPF.Services
 
                     var title = buildData["title"]?.ToString() ?? "";
                     var isRetail = !title.Contains("Preview", StringComparison.OrdinalIgnoreCase);
+                    var arch = buildData["arch"]?.ToString() ?? "unknown";
 
                     buildList.Add((
                         Id: buildData["uuid"]?.ToString() ?? "",
                         Title: title,
                         BuildNumber: buildData["build"]?.ToString() ?? "",
-                        IsRetail: isRetail
+                        IsRetail: isRetail,
+                        Architecture: arch
                     ));
                 }
 
@@ -68,32 +67,21 @@ namespace UUPDumpWPF.Services
                     return 0;
                 }).Take(50).ToList();
 
-                // Remove duplicates based on BuildNumber (keep first occurrence of each build number)
+                // Remove duplicates based on BuildNumber AND Architecture (keep first occurrence of each build/arch combination)
+                // This is important because the same build number can have both amd64 and arm64 versions
                 var uniqueBuilds = sortedBuilds
-                    .GroupBy(b => b.BuildNumber)
+                    .GroupBy(b => $"{b.BuildNumber}_{b.Architecture}")
                     .Select(g => g.First())
                     .ToList();
 
-                // Fetch architectures in parallel
-                var architectureTasks = uniqueBuilds.Select(async b =>
+                // Architecture is already included in the API response, no need for additional calls
+                var builds = uniqueBuilds.Select(b => new Build
                 {
-                    if (_archCache.TryGetValue(b.Id, out var cachedArch))
-                        return (b, Architecture: cachedArch);
-
-                    var arch = await GetArchitectureAsync(b.Id);
-                    _archCache.TryAdd(b.Id, arch);
-                    return (b, Architecture: arch);
-                });
-
-                var results = await Task.WhenAll(architectureTasks);
-
-                var builds = results.Select(r => new Build
-                {
-                    Id = r.b.Id,
-                    Title = r.b.Title,
-                    BuildNumber = r.b.BuildNumber,
-                    IsRetail = r.b.IsRetail,
-                    Architecture = r.Architecture
+                    Id = b.Id,
+                    Title = b.Title,
+                    BuildNumber = b.BuildNumber,
+                    IsRetail = b.IsRetail,
+                    Architecture = b.Architecture
                 }).ToList();
 
                 return builds;
@@ -102,43 +90,6 @@ namespace UUPDumpWPF.Services
             {
                 throw new Exception($"Failed to fetch builds: {ex.Message}", ex);
             }
-        }
-
-        private async Task<string> GetArchitectureAsync(string buildId)
-        {
-            try
-            {
-                for (int i = 0; i < 3; i++)
-                {
-                    try
-                    {
-                        var response = await _httpClient.GetStringAsync(
-                            $"https://api.uupdump.net/listlangs.php?id={buildId}");
-
-                        var json = JsonNode.Parse(response);
-                        if (json?["response"]?["updateInfo"]?["arch"] != null)
-                            return json["response"]!["updateInfo"]!["arch"]!.ToString();
-
-                        if (i < 2)
-                        {
-                            await Task.Delay(500);
-                            continue;
-                        }
-                    }
-                    catch
-                    {
-                        if (i < 2)
-                        {
-                            await Task.Delay(500);
-                            continue;
-                        }
-                        throw;
-                    }
-                }
-            }
-            catch { }
-
-            return "amd64"; // Default fallback
         }
 
         public async Task<List<Language>> GetLanguagesAsync(string buildId)
