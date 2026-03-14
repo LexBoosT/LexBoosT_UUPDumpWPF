@@ -1,6 +1,6 @@
 # UUP Dump WPF - LexBoosT ISO Downloader
 
-<img width="1200" height="900" alt="Capture d&#39;écran 2026-03-13 043545" src="https://github.com/user-attachments/assets/43ac25cb-02a4-4263-8813-e181d930cc9a" />
+
 
 
 WPF application in C# with dark theme and Mica effect for downloading Windows ISOs via UUP Dump.
