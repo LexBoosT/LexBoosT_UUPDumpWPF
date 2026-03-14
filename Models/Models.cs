@@ -19,6 +19,8 @@ namespace UUPDumpWPF.Models
     {
         public string Code { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
+        public bool IsVirtual { get; set; } = false;
+        public string? BaseEditionCode { get; set; } = null;
     }
 
     public class WindowsVersion

@@ -1,0 +1,60 @@
+<Window x:Class="UUPDumpWPF.VirtualEditionsDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Select Virtual Editions"
+        Height="420"
+        Width="500"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False">
+
+    <Border Background="#2D2D2D" CornerRadius="8">
+        <Grid Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- Header -->
+            <StackPanel Grid.Row="0" Margin="0,0,0,15">
+                <TextBlock FontSize="18" FontWeight="Bold" Foreground="#0078D7" 
+                           Text="Virtual Editions for Windows Pro" TextWrapping="Wrap"/>
+                <TextBlock FontSize="12" Foreground="#808080" Margin="0,5,0,0"
+                           Text="Select the editions you want to create automatically after download." TextWrapping="Wrap"/>
+            </StackPanel>
+
+            <!-- Checkboxes -->
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,0,0,15">
+                <StackPanel>
+                    <CheckBox x:Name="ChkProWorkstation" Margin="0,5" Content="Windows Pro for Workstations" 
+                              Foreground="White" FontSize="13"/>
+                    <CheckBox x:Name="ChkProEducation" Margin="0,5" Content="Windows Pro Education" 
+                              Foreground="White" FontSize="13"/>
+                    <CheckBox x:Name="ChkEducation" Margin="0,5" Content="Windows Education" 
+                              Foreground="White" FontSize="13"/>
+                    <CheckBox x:Name="ChkEnterprise" Margin="0,5" Content="Windows Enterprise" 
+                              Foreground="White" FontSize="13"/>
+                    <CheckBox x:Name="ChkServerRdsh" Margin="0,5" Content="Windows Enterprise Multi-session (Virtual Desktops)" 
+                              Foreground="White" FontSize="13"/>
+                    <CheckBox x:Name="ChkIoTEnterprise" Margin="0,5" Content="Windows IoT Enterprise" 
+                              Foreground="White" FontSize="13"/>
+                    <CheckBox x:Name="ChkIoTEnterpriseK" Margin="0,5" Content="Windows IoT Enterprise Subscription" 
+                              Foreground="White" FontSize="13"/>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Buttons -->
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="Select All" Width="110" Margin="0,0,10,0"
+                        Click="SelectAll_Click" Style="{StaticResource ButtonStyle}"/>
+                <Button Content="Select None" Width="110" Margin="0,0,10,0"
+                        Click="SelectNone_Click" Style="{StaticResource ButtonStyle}"/>
+                <Button Content="Cancel" Width="90" Margin="0,0,10,0"
+                        Click="Cancel_Click" Style="{StaticResource ButtonStyle}"/>
+                <Button Content="OK" Width="90"
+                        Click="OK_Click" Style="{StaticResource SuccessButtonStyle}"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

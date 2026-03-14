@@ -147,6 +147,24 @@ namespace UUPDumpWPF.Services
                     });
                 }
 
+                // Add virtual editions based on the base edition
+                // These are additional editions that can be created from the base edition
+                // Note: Virtual editions are NOT added to the list anymore - they will be shown in a separate section
+                var hasProEdition = editions.Any(e => e.Code.Equals("professional", StringComparison.OrdinalIgnoreCase));
+                var hasHomeEdition = editions.Any(e => e.Code.Equals("core", StringComparison.OrdinalIgnoreCase));
+                var hasProNEdition = editions.Any(e => e.Code.Equals("professionaln", StringComparison.OrdinalIgnoreCase));
+
+                // Store virtual edition info for UI (not added to list)
+                if (hasProEdition)
+                {
+                    editions.Add(new Edition { 
+                        Code = "_VIRTUAL_PRO", 
+                        Name = ">>> Windows Pro - Additional Editions Available <<<", 
+                        IsVirtual = false,
+                        BaseEditionCode = "professional"
+                    });
+                }
+
                 return editions;
             }
             catch

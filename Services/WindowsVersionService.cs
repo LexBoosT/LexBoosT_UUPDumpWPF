@@ -41,7 +41,10 @@ namespace UUPDumpWPF.Services
                 // Fallback to build number detection
                 versionName = int.Parse(baseBuild) switch
                 {
-                    >= 26200 => "28H2",
+                    >= 29000 => "27H2",
+                    >= 28000 => "26H1",
+                    >= 26300 => "26H2",
+                    >= 26200 => "25H2",
                     >= 26100 => "24H2",
                     >= 22631 => "23H2",
                     >= 22621 => "22H2",
