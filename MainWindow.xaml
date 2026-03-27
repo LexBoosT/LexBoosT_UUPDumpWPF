@@ -2,7 +2,7 @@
     x:Class="UUPDumpWPF.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    Title="LexBoosT UUP Dump ISO Downloader v1.3"
+    Title="LexBoosT UUP Dump ISO Downloader v1.4"
     Width="1200"
     Height="900"
     MinWidth="1100"
@@ -307,7 +307,7 @@
                         Content="Preview"
                         FontSize="15"
                         Foreground="{DynamicResource {x:Static SystemColors.ActiveCaptionBrushKey}}"
-                        Unchecked="RetailFilter_Changed" />
+                        Unchecked="RetailFilter_Changed" IsChecked="True" />
 
                     <TextBlock
                         Grid.Column="4"
@@ -1008,7 +1008,7 @@
                     </Hyperlink>
                 </TextBlock>
             </Border>
-            <TextBlock HorizontalAlignment="Left" Height="28" Margin="30,12,0,0" Grid.Row="6" TextWrapping="Wrap" Text="Version 1.3" VerticalAlignment="Top" Width="94" FontWeight="Bold" FontSize="14" Foreground="White"/>
+            <TextBlock HorizontalAlignment="Left" Height="28" Margin="30,12,0,0" Grid.Row="6" TextWrapping="Wrap" Text="Version 1.4" VerticalAlignment="Top" Width="94" FontWeight="Bold" FontSize="14" Foreground="White"/>
         </Grid>
     </Border>
 </Window>

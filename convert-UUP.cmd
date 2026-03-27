@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v1.3
+@set uivr=v121
 @echo off
 :: Change to 1 to enable debug mode
 set _Debug=0
@@ -1062,11 +1062,14 @@ rmdir /s /q "%_mount%\"
 (echo.&echo Failed mounting boot.wim)>>"!logerr!"
 goto :BootPE
 )
+call :wds_add
 if %_build% geq 26052 if exist "%_mount%\Windows\Servicing\Packages\WinPE-Rejuv-Package~*.mum" (
 for /f "delims=" %%# in ('dir /b /a:-d "%_mount%\Windows\Servicing\Packages\WinPE-Rejuv-Package~*.mum"') do (
   %_dism1% /Image:"%_mount%" /LogPath:"%_dLog%\DismNUL.log" /Remove-Package /PackageName:%%~n# %_Nul3%
   )
+call :wds_rem
 %_dism1% /Commit-Image /MountDir:"%_mount%" /Append %_Supp%
+call :wds_add
 set relite=1
 set ready2=1
 )
@@ -1074,6 +1077,7 @@ set ready2=1
 if !errorlevel! neq 0 (
   (echo.&echo Dism.exe Set-TargetPath for boot.wim failed)>>"!logerr!"
   )
+call :wds_rem
 %_dism1% /Unmount-Wim /MountDir:"%_mount%" /Commit %_Supp%
 set ERRTEMP=%ERRORLEVEL%
 if %ERRTEMP% neq 0 (
@@ -1094,6 +1098,7 @@ ren .\bin\temp\SOFTWARE.new SOFTWARE
 type nul>bin\boot-wim.txt
 >>bin\boot-wim.txt echo add 'bin^\temp^\SOFTWARE' '^\Windows^\System32^\config^\SOFTWARE'
 set "_bkimg="
+if exist "ISOFOLDER\sources\winpe.jpg" del /f /q ISOFOLDER\sources\winpe.jpg %_Nul3%
 wimlib-imagex.exe extract ISOFOLDER\sources\boot.wim 1 Windows\System32\winpe.jpg --dest-dir=ISOFOLDER\sources --no-acls --no-attributes --nullglob %_Null%
 for %%# in (background_cli.bmp, background_svr.bmp, background_cli.png, background_svr.png, winpe.jpg) do (if exist "ISOFOLDER\sources\%%#" if not defined _bkimg set "_bkimg=%%#")
 if defined _bkimg if not exist "ISOFOLDER\sources\winpe.jpg" (
@@ -1112,6 +1117,7 @@ if not defined ready2 (
 >>bin\boot-wim.txt echo add 'ISOFOLDER^\setup.exe' '^\setup.exe'
 >>bin\boot-wim.txt echo add 'ISOFOLDER^\sources^\inf^\setup.cfg' '^\sources^\inf^\setup.cfg'
 if not defined _bkimg (
+if exist "ISOFOLDER\sources\winpe.jpg" del /f /q ISOFOLDER\sources\winpe.jpg %_Nul3%
 wimlib-imagex.exe extract ISOFOLDER\sources\boot.wim 1 Windows\System32\winpe.jpg --dest-dir=ISOFOLDER\sources --no-acls --no-attributes --nullglob %_Null%
 for %%# in (background_cli.bmp, background_svr.bmp, background_cli.png, background_svr.png, winpe.jpg) do (if exist "ISOFOLDER\sources\%%#" if not defined _bkimg set "_bkimg=%%#")
 )
@@ -1136,6 +1142,9 @@ wimlib-imagex.exe info ISOFOLDER\sources\boot.wim 2 "Microsoft Windows Setup (%a
 )
 wimlib-imagex.exe update ISOFOLDER\sources\boot.wim 2 < bin\boot-wim.txt %_Null%
 wimlib-imagex.exe info ISOFOLDER\sources\boot.wim 2 --image-property FLAGS=2 %_Nul3%
+if defined _bkimg (
+wimlib-imagex.exe update ISOFOLDER\sources\boot.wim 1 --command="add 'ISOFOLDER\sources\%_bkimg%' '\Windows\system32\winpe.jpg'" %_Nul3%
+)
 if %relite% neq 0 (
 call :dk_color1 %Blue% "=== Rebuilding boot.wim . . ." 4 5
 %_wrb% wimlib-imagex.exe optimize ISOFOLDER\sources\boot.wim %_Supp%
@@ -2730,6 +2739,7 @@ if exist "%~1\Microsoft-Windows-SV2BetaEnablement-Package~*.mum" set "_fixSV=226
 if exist "%~1\Microsoft-Windows-Ge-Client-Server-Beta-Version-Enablement-Package~*.mum" set "_fixSV=26120"&set "_fixEP=26120"
 if exist "%~1\Microsoft-Windows-Ge-Client-Server-26200-Version-Enablement-Package~*.mum" set "_fixSV=26200"&set "_fixEP=26200"
 if exist "%~1\Microsoft-Windows-Ge-Client-Server-26220-Version-Enablement-Package~*.mum" set "_fixSV=26220"&set "_fixEP=26220"
+if exist "%~1\Microsoft-Windows-Ge-Client-Server-26300-Version-Enablement-Package~*.mum" set "_fixSV=26300"&set "_fixEP=26300"
 if exist "%~1\Microsoft-Windows-Client-Br-28020-Version-Enablement-Package~*.mum" set "_fixSV=28020"&set "_fixEP=28020"
 if exist "%~1\Microsoft-Windows-Client-Br-28100-Version-Enablement-Package~*.mum" set "_fixSV=28100"&set "_fixEP=28100"
 if exist "%~1\Microsoft-Windows-Client-Br-28120-Version-Enablement-Package~*.mum" set "_fixSV=28120"&set "_fixEP=28120"
@@ -2811,7 +2821,7 @@ set "_CedKey=%_Wnn%\x86_%_CedCmp%_%_Pkt%_none_83204c2f0ca4ce9b"
 )
 for /f "tokens=4,5,6 delims=_" %%H in ('dir /b "%mumtarget%\Windows\WinSxS\Manifests\%xBT%_microsoft-windows-foundation_*.manifest"') do set "_Fnd=microsoft-w..-foundation_%_Pkt%_%%H_%%~nJ"
 if %_build% geq 14393 if %_build% lss 19041 if not exist "%mumtarget%\Windows\WinSxS\Manifests\%_SupCom%.manifest" call :Latent _Sup %_Nul3%
-if %_build% geq 19041 if %_build% lss 19046 if not exist "%mumtarget%\Windows\WinSxS\Manifests\%_EsuCom%.manifest" call :Latent _Esu %_Nul3%
+if %_build% geq 14393 if %_build% lss 19046 if not exist "%mumtarget%\Windows\WinSxS\Manifests\%_EsuCom%.manifest" call :Latent _Esu %_Nul3%
 if %_build% geq 17134 if %_build% lss 20348 if not exist "%mumtarget%\Windows\WinSxS\Manifests\%_CedCom%.manifest" if not exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" if not exist "%mumtarget%\Windows\WinSxS\Manifests\%xBT%_%_CedCmp%_*.manifest" if %SkipEdge% equ 1 call :Latent _Ced %_Nul3%
 set lcuall=
 set lcumsu=
@@ -2854,6 +2864,7 @@ if %_build% geq 21382 if exist "!_UUP!\*Windows1*-KB*.msu" (for /f "tokens=* del
 if %psfwim% equ 1 if exist "!_cabdir!\*Windows1*-KB*.wim" (for /f "tokens=* delims=" %%# in ('dir /b /on "!_cabdir!\*Windows1*-KB*.wim"') do if defined psfx_%%~n# (set "pckn=%%~n#"&set "packx=%%~x#"&set "package=%%#"&set "dest=!_cabdir!\%%~n#"&call :procmum))
 if %psfwim% equ 1 if exist "!_UUP!\RCU-*-*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!_UUP!\RCU-*-*.cab"') do (set "pckn=%%~n#"&set "packx=%%~x#"&set "package=%%#"&set "dest=!_cabdir!\%%~n#"&call :procrcu)
 if not exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" if exist "!_UUP!\*defender-dism*%_bit%*.cab" (for /f "tokens=* delims=" %%# in ('dir /b "!_UUP!\*defender-dism*%_bit%*.cab"') do (set "pckn=%%~n#"&set "packx=%%~x#"&set "package=%%#"&set "dest=!_cabdir!\%%~n#"&call :procmum))
+call :wds_add
 if %_build% geq 22621 if %winbuild% lss 10240 reg.exe query "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion" /v CurrentMajorVersionNumber %_Nul3% || (
 reg.exe add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion" /v CurrentMajorVersionNumber /t REG_DWORD /d 10 /f %_Nul3%
 reg.exe add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion" /v CurrentMinorVersionNumber /t REG_DWORD /d 0 /f %_Nul3%
@@ -2912,11 +2923,15 @@ if %sduRE% equ 1 (
 set relite=1
 if not defined lcumsu if %_build% lss 26052 call :cleanup
 %_wrb% if not defined lcumsu if %ResetBase% equ 0 %_dism2%:"!_cabdir!" %dismtarget% /Cleanup-Image /StartComponentCleanup /ResetBase %_Null%
+call :wds_rem
 %_dism2%:"!_cabdir!" /Commit-Image /MountDir:"%_mount%" /Append %_Supp%
+call :wds_add
 )
 if %noLCU% equ 0 if not defined safeos if %SkipWinRE% equ 0 if %_build% geq 26052 if exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
 set relite=1
+call :wds_rem
 %_dism2%:"!_cabdir!" /Commit-Image /MountDir:"%_mount%" /Append %_Supp%
+call :wds_add
 )
 if %mntRE% equ 1 (
 call :dk_color1 %Gray% "=== Remounting image . . ." 4
@@ -3032,7 +3047,9 @@ if exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" if %S
 set _clnwinpe=1
 set relite=1
 call :cleanup
+call :wds_rem
 %_dism2%:"!_cabdir!" /Commit-Image /MountDir:"%_mount%" /Append %_Supp%
+call :wds_add
 )
 if exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" goto :%_gobk%
 if not exist "%mumtarget%\Windows\Servicing\Packages\Package_for_RollupFix*.mum" goto :%_gobk%
@@ -3139,6 +3156,19 @@ if /i %xOS%==x86 if /i not %arch%==x86 reg.exe save HKLM\%SOFTWARE% "%mumtarget%
 reg.exe unload HKLM\%SOFTWARE% %_Nul1%
 if /i %xOS%==x86 if /i not %arch%==x86 move /y "%mumtarget%\Windows\System32\Config\SOFTWARE2" "%mumtarget%\Windows\System32\Config\SOFTWARE" %_Nul1%
 goto :eof
+
+:wds_add
+if %_build% geq 29550 if %winbuild% lss 20348 if /i not %xOS%==x86 (
+if /i %arch%==%xOS% copy /y %SysPath%\wdscore.dll "%_mount%\Windows\System32\downlevel\" %_Nul1%
+if /i %arch%==x64 if /i %xOS%==amd64 copy /y %SysPath%\wdscore.dll "%_mount%\Windows\System32\downlevel\" %_Nul1%
+if exist "%SystemRoot%\SysWOW64\wdscore.dll" if exist "%_mount%\Windows\SysWOW64\downlevel\*.dll" copy /y %SystemRoot%\SysWOW64\wdscore.dll "%_mount%\Windows\SysWOW64\downlevel\" %_Nul1%
+)
+exit /b
+
+:wds_rem
+if exist "%_mount%\Windows\System32\downlevel\wdscore.dll" del /f /q "%_mount%\Windows\System32\downlevel\wdscore.dll" %_Nul3%
+if exist "%_mount%\Windows\SysWOW64\downlevel\wdscore.dll" del /f /q "%_mount%\Windows\SysWOW64\downlevel\wdscore.dll" %_Nul3%
+exit /b
 
 :ReLCU
 if exist "!lcudir!\update.mum" if exist "!lcudir!\*.manifest" goto :eof
@@ -3785,6 +3815,7 @@ if !errorlevel! neq 0 (
 call :dismount 1
 goto :eof
 )
+call :wds_add
 set _noApps=1
 set _noSave=1
 if %WimRE% equ 0 if %_wimEdge% equ 1 if %SkipEdge% equ 0 (
@@ -3885,10 +3916,12 @@ if defined DrvSrcOS %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DrvOS.lo
 
 :doCommit
 if %_noSave% equ 1 goto :noCommit
+call :wds_rem
 %_dism2%:"!_cabdir!" /Commit-Wim /MountDir:"%_mount%"
 if !errorlevel! neq 0 (
 call :dismount 1
 )
+call :wds_add
 :noCommit
 if %WimRE% equ 1 goto :crDsc
 
@@ -3902,7 +3935,9 @@ if %uProf% equ 0 goto :crProN
 if %_inx% neq %iHome% goto :crProN
 call :dk_color1 %Gray% "=== Creating Edition: Pro" 4
 %_dism2%:"!_cabdir!" /Image:"%_mount%" /LogPath:"%_dLog%\DismCore2Pro.log" /Set-Edition:Professional /Channel:Retail
+call :wds_rem
 %_dism2%:"!_cabdir!" /Commit-Image /MountDir:"%_mount%" /Append %_Supp%
+call :wds_add
 call set /a _imgi+=1
 call set ddesc="%_wtx% Pro"
 wimlib-imagex.exe info "%_www%" !_imgi! !ddesc! !ddesc! --image-property DISPLAYNAME=!ddesc! --image-property DISPLAYDESCRIPTION=!ddesc! --image-property FLAGS=Professional %_Nul3%
@@ -3914,7 +3949,9 @@ if %uProN% equ 0 goto :crSDC
 if %_inx% neq %iHomN% goto :crSDC
 call :dk_color1 %Gray% "=== Creating Edition: Pro N" 4
 %_dism2%:"!_cabdir!" /Image:"%_mount%" /LogPath:"%_dLog%\DismCoreN2ProN.log" /Set-Edition:ProfessionalN /Channel:Retail
+call :wds_rem
 %_dism2%:"!_cabdir!" /Commit-Image /MountDir:"%_mount%" /Append %_Supp%
+call :wds_add
 call set /a _imgi+=1
 call set ddesc="%_wtx% Pro N"
 wimlib-imagex.exe info "%_www%" !_imgi! !ddesc! !ddesc! --image-property DISPLAYNAME=!ddesc! --image-property DISPLAYDESCRIPTION=!ddesc! --image-property FLAGS=ProfessionalN %_Nul3%
@@ -3926,7 +3963,9 @@ if %uSDC% equ 0 goto :crSDD
 if %_inx% neq %iSSC% goto :crSDD
 call :dk_color1 %Gray% "=== Creating Edition: Datacenter Core" 4
 %_dism2%:"!_cabdir!" /Image:"%_mount%" /LogPath:"%_dLog%\DismSrvSc2SrvDc.log" /Set-Edition:ServerDatacenterCor /Channel:Retail
+call :wds_rem
 %_dism2%:"!_cabdir!" /Commit-Image /MountDir:"%_mount%" /Append %_Supp%
+call :wds_add
 call set /a _imgi+=1
 call set cname="%_wsr% ServerDatacenterCore"
 call set dname="%_wsr% Datacenter"
@@ -3938,7 +3977,9 @@ if %uSDD% equ 0 goto :crEnd
 if %_inx% neq %iSSD% goto :crEnd
 call :dk_color1 %Gray% "=== Creating Edition: Datacenter" 4
 %_dism2%:"!_cabdir!" /Image:"%_mount%" /LogPath:"%_dLog%\DismSrvSf2SrvDf.log" /Set-Edition:ServerDatacenter /Channel:Retail
+call :wds_rem
 %_dism2%:"!_cabdir!" /Commit-Image /MountDir:"%_mount%" /Append %_Supp%
+call :wds_add
 call set /a _imgi+=1
 call set cname="%_wsr% ServerDatacenter"
 call set dname="%_wsr% Datacenter (Desktop Experience)"

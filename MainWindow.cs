@@ -116,74 +116,82 @@ namespace UUPDumpWPF
                 // Get current build number
                 var currentVersion = _versionService.GetCurrentVersion();
                 var currentBuildParts = currentVersion.Build.Split('.');
-                if (!int.TryParse(currentBuildParts[0], out int currentMajor) || currentBuildParts.Length < 2)
+                if (currentBuildParts.Length < 2)
                     return;
-                if (!int.TryParse(currentBuildParts[1], out int currentMinor))
+                if (!int.TryParse(currentBuildParts[0], out int currentBuildNumber))
+                    return;
+                if (!int.TryParse(currentBuildParts[1], out int currentUBR))
                     return;
 
-                // Search for newer builds on UUP Dump (fast - only top 50)
-                var builds = await _uupService.GetBuildsAsync("windows 11");
+                // First, search specifically for the current build branch to find newer UBR
+                // e.g., if current is 26200.8106, search for "26200" to find 26200.8116
+                var builds = await _uupService.GetBuildsAsync(currentBuildNumber.ToString());
 
                 if (builds.Count == 0)
                     return;
 
-                // Find the highest build number for the same major version
-                Build? highestBuild = null;
-                int highestMinor = -1;
+                // Find a newer build with the SAME build number (same branch)
+                // e.g., if current is 26200.8106, only look for 26200.8116 or higher UBR
+                Build? newerBuild = null;
+                int newerUBR = -1;
 
                 foreach (var build in builds)
                 {
                     var buildParts = build.BuildNumber.Split('.');
-                    if (buildParts.Length < 2)
+                    if (buildParts.Length == 0)
                         continue;
 
-                    if (!int.TryParse(buildParts[0], out int buildMajor))
+                    if (!int.TryParse(buildParts[0], out int buildNumber))
                         continue;
 
-                    // Only consider builds with the same major version
-                    if (buildMajor != currentMajor)
+                    // Only consider builds with the SAME build number (same branch)
+                    if (buildNumber != currentBuildNumber)
                         continue;
 
-                    if (!int.TryParse(buildParts[1], out int buildMinor))
-                        continue;
-
-                    // Check if this build has a higher minor version
-                    if (buildMinor > highestMinor)
+                    // Parse UBR/Revision if present
+                    int buildUBR = 0;
+                    if (buildParts.Length >= 2)
                     {
-                        highestMinor = buildMinor;
-                        highestBuild = build;
+                        int.TryParse(buildParts[1], out buildUBR);
+                    }
+
+                    // Check if this build has a higher UBR than current
+                    if (buildUBR > currentUBR)
+                    {
+                        // Check if this is the newest UBR found so far
+                        if (newerBuild == null || buildUBR > newerUBR)
+                        {
+                            newerUBR = buildUBR;
+                            newerBuild = build;
+                        }
                     }
                 }
 
-                if (highestBuild == null)
+                if (newerBuild == null)
                     return;
 
-                // Check if the highest build is newer than current
-                if (highestMinor > currentMinor)
+                this.Dispatcher.Invoke(() =>
                 {
-                    this.Dispatcher.Invoke(() =>
-                    {
-                        var result = MessageBox.Show(
-                            $"A newer build is available!\n\n" +
-                            $"Your build: {currentVersion.Build}\n" +
-                            $"Latest build: {highestBuild.BuildNumber}\n\n" +
-                            $"Title: {highestBuild.Title}\n\n" +
-                            $"Would you like to search for this build?",
-                            "New Build Available",
-                            MessageBoxButton.YesNo,
-                            MessageBoxImage.Information);
+                    var result = MessageBox.Show(
+                        $"A newer build is available!\n\n" +
+                        $"Your build: {currentVersion.Build}\n" +
+                        $"Latest build: {newerBuild.BuildNumber}\n\n" +
+                        $"Title: {newerBuild.Title}\n\n" +
+                        $"Would you like to search for this build?",
+                        "New Build Available",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Information);
 
-                        if (result == MessageBoxResult.Yes)
-                        {
-                            TxtSearch.Text = "windows 11";
-                            BtnSearch_Click(null!, null!);
-                        }
-                    });
-                }
+                    if (result == MessageBoxResult.Yes)
+                    {
+                        TxtSearch.Text = newerBuild.BuildNumber;
+                        BtnSearch_Click(null!, null!);
+                    }
+                });
             }
-            catch
+            catch (Exception ex)
             {
-                // Silently fail
+                System.Diagnostics.Debug.WriteLine($"CheckForNewerBuildAsync error: {ex.Message}");
             }
         }
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.4 - March 27, 2026
+
+### 🐛 Bug Fixes
+- **Startup Download**: Update necessary files at application startup if not present:
+  1. uup-converter v121 : Implemented a workaround for conversions no longer working on Win 11 for the latest Canary builds.
+  2. Automatically searching for a newer build version when starting the application now works.
+
 ## v1.3 - March 14, 2026
 
 ### 🌟 Major Features
