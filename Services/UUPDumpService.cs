@@ -45,8 +45,10 @@ namespace UUPDumpWPF.Services
                     if (buildData == null) continue;
 
                     var title = buildData["title"]?.ToString() ?? "";
-                    var isRetail = !title.Contains("Preview", StringComparison.OrdinalIgnoreCase);
                     var arch = buildData["arch"]?.ToString() ?? "unknown";
+
+                    // Determine Retail/Preview from title keywords
+                    var isRetail = DetermineRingFromTitle(title) == "Retail";
 
                     buildList.Add((
                         Id: buildData["uuid"]?.ToString() ?? "",
@@ -57,7 +59,7 @@ namespace UUPDumpWPF.Services
                     ));
                 }
 
-                // Sort and limit to top 50 builds for faster loading
+                // Sort and limit to top 200 builds for faster loading
                 var sortedBuilds = buildList.OrderByDescending(b =>
                 {
                     var parts = b.BuildNumber.Split('.');
@@ -65,16 +67,18 @@ namespace UUPDumpWPF.Services
                         double.TryParse(parts[1], out var minor))
                         return major + minor / 10000.0;
                     return 0;
-                }).Take(50).ToList();
+                }).Take(200).ToList();
 
-                // Remove duplicates based on BuildNumber AND Architecture (keep first occurrence of each build/arch combination)
-                // This is important because the same build number can have both amd64 and arm64 versions
+                // Remove duplicates based on BuildNumber, Architecture AND Retail/Preview type
+                // This is important because the same build number can have:
+                // - Both amd64 and arm64 versions
+                // - Both Retail and Preview versions for the same build/architecture
                 var uniqueBuilds = sortedBuilds
-                    .GroupBy(b => $"{b.BuildNumber}_{b.Architecture}")
+                    .GroupBy(b => $"{b.BuildNumber}_{b.Architecture}_{(b.IsRetail ? "Retail" : "Preview")}")
                     .Select(g => g.First())
                     .ToList();
 
-                // Architecture is already included in the API response, no need for additional calls
+                // Create Build objects
                 var builds = uniqueBuilds.Select(b => new Build
                 {
                     Id = b.Id,
@@ -90,6 +94,36 @@ namespace UUPDumpWPF.Services
             {
                 throw new Exception($"Failed to fetch builds: {ex.Message}", ex);
             }
+        }
+
+        /// <summary>
+        /// Determines if the build is Retail or Preview based on title keywords
+        /// </summary>
+        private string DetermineRingFromTitle(string title)
+        {
+            if (string.IsNullOrEmpty(title))
+                return "Retail";
+
+            var titleLower = title.ToLowerInvariant();
+
+            // ========== PREVIEW VERSIONS ==========
+            // "Preview Update for Windows", "Cumulative Update Preview", "Insider Preview"
+            if (titleLower.Contains("preview update for windows") ||
+                titleLower.Contains("cumulative update preview") ||
+                titleLower.Contains("insider preview"))
+                return "Preview";
+            
+            // ========== RETAIL VERSIONS ==========
+            // "Security Update", "Cumulative Update" (without Preview), "Windows 11, version"
+            if (titleLower.Contains("security update") ||
+                titleLower.Contains("cumulative update") ||
+                titleLower.Contains("update for windows") ||
+                titleLower.Contains("feature update") ||
+                titleLower.Contains("windows 11, version"))
+                return "Retail";
+            
+            // Default to Retail
+            return "Retail";
         }
 
         public async Task<List<Language>> GetLanguagesAsync(string buildId)

@@ -1,5 +1,22 @@
 # Changelog
 
+## v1.5 - March 30, 2026
+
+### 🎨 UI Changes
+- **Simplified Search Panel**: Retail, Preview, AMD64, ARM64 checkboxes for filtering
+- **Clean Build List**: Displays Title, Build Number, and Architecture (color-coded)
+
+### 🔧 Improvements
+- **Accurate Build Detection**: Correctly identifies Retail vs Preview versions from title keywords
+- **Complete Results**: Shows all build variants (AMD64 + ARM64 + Retail + Preview)
+- **Real-time Filtering**: Instant filter updates without re-searching
+
+### 🐛 Bug Fixes
+- **Missing Builds Fixed**: All architecture and type variants now appear correctly
+- **Build Deduplication**: Smart grouping prevents data loss while avoiding duplicates
+
+---
+
 ## v1.4 - March 27, 2026
 
 ### 🐛 Bug Fixes
