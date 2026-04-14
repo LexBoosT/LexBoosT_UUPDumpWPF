@@ -2,7 +2,7 @@
     x:Class="UUPDumpWPF.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    Title="LexBoosT UUP Dump ISO Downloader v1.5"
+    Title="LexBoosT UUP Dump ISO Downloader v1.6"
     Width="1200"
     Height="900"
     MinWidth="1100"
@@ -995,7 +995,7 @@
                     </Hyperlink>
                 </TextBlock>
             </Border>
-            <TextBlock HorizontalAlignment="Left" Height="28" Margin="30,12,0,0" Grid.Row="6" TextWrapping="Wrap" Text="Version 1.5" VerticalAlignment="Top" Width="94" FontWeight="Bold" FontSize="14" Foreground="White"/>
+            <TextBlock HorizontalAlignment="Left" Height="28" Margin="30,12,0,0" Grid.Row="6" TextWrapping="Wrap" Text="Version 1.6" VerticalAlignment="Top" Width="94" FontWeight="Bold" FontSize="14" Foreground="White"/>
         </Grid>
     </Border>
 </Window>

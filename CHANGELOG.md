@@ -1,5 +1,35 @@
 # Changelog
 
+## v1.6 - April 14, 2026
+
+### 🐛 Bug Fixes
+- **Build Deduplication Fixed**: Fixed issue where multiple builds with same build number but different variants (e.g., "Windows 11" vs "Feature Update for Windows CPC OS") were incorrectly merged into a single entry
+- **Missing Builds**: All build variants now appear correctly in search results (Windows 11, CPC OS, Enterprise, Education, IoT, etc.)
+
+### ✨ New Features
+- **Smart Build Sorting**: Builds are now sorted by priority to show the most relevant variant first:
+  1. Standard Windows 11/10 (highest priority)
+  2. CPC OS (Cloud PC)
+  3. Enterprise editions
+  4. Education editions
+  5. IoT editions
+  6. Feature Updates
+  7. Security/Cumulative Updates
+  8. Enabled Editions
+
+### 🎯 Improvements
+- **Update Notification Priority**: When notifying about newer builds, the application now prefers "Windows 11, version" over "Feature Update for Windows CPC OS" or other variants
+- **Better Build Differentiation**: Uses title-based variant keys to properly distinguish between different build types with the same build number and architecture
+- **Enhanced Debug Logging**: Added comprehensive debug output to help diagnose search and filtering issues
+
+### 🔧 Technical Changes
+- **New Method**: `GetBuildVariantKey()` - Extracts variant identifier from build titles
+- **New Method**: `GetBuildSortPriority()` - Returns sort priority for build ordering
+- **Improved Deduplication**: Grouping key now includes build variant: `{BuildNumber}_{Architecture}_{Retail/Preview}_{VariantKey}`
+- **Better Notification Logic**: `CheckForNewerBuildAsync()` now groups builds by UBR and selects the most appropriate variant (Windows 11 > CPC OS > others)
+
+---
+
 ## v1.5 - March 30, 2026
 
 ### 🎨 UI Changes

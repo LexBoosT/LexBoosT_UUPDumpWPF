@@ -132,9 +132,9 @@ namespace UUPDumpWPF
 
                 // Find a newer build with the SAME build number (same branch)
                 // e.g., if current is 26200.8106, only look for 26200.8116 or higher UBR
-                Build? newerBuild = null;
-                int newerUBR = -1;
-
+                // Group by UBR and prefer "Windows 11" title over "Feature Update" or "CPC OS"
+                var newerBuildsByUBR = new Dictionary<int, List<Build>>();
+                
                 foreach (var build in builds)
                 {
                     var buildParts = build.BuildNumber.Split('.');
@@ -158,14 +158,40 @@ namespace UUPDumpWPF
                     // Check if this build has a higher UBR than current
                     if (buildUBR > currentUBR)
                     {
-                        // Check if this is the newest UBR found so far
-                        if (newerBuild == null || buildUBR > newerUBR)
-                        {
-                            newerUBR = buildUBR;
-                            newerBuild = build;
-                        }
+                        if (!newerBuildsByUBR.ContainsKey(buildUBR))
+                            newerBuildsByUBR[buildUBR] = new List<Build>();
+                        
+                        newerBuildsByUBR[buildUBR].Add(build);
                     }
                 }
+
+                if (newerBuildsByUBR.Count == 0)
+                    return;
+
+                // Get the highest UBR
+                int highestUBR = newerBuildsByUBR.Keys.Max();
+                var buildsWithHighestUBR = newerBuildsByUBR[highestUBR];
+
+                // Prefer "Windows 11, version" over other variants like "Feature Update" or "CPC OS"
+                Build? newerBuild = null;
+                
+                // Priority 1: Standard Windows 11
+                newerBuild = buildsWithHighestUBR.FirstOrDefault(b => 
+                    b.Title.Contains("Windows 11, version", StringComparison.OrdinalIgnoreCase));
+                
+                // Priority 2: Standard Windows 10
+                if (newerBuild == null)
+                    newerBuild = buildsWithHighestUBR.FirstOrDefault(b => 
+                        b.Title.Contains("Windows 10, version", StringComparison.OrdinalIgnoreCase));
+                
+                // Priority 3: CPC OS
+                if (newerBuild == null)
+                    newerBuild = buildsWithHighestUBR.FirstOrDefault(b => 
+                        b.Title.Contains("CPC OS", StringComparison.OrdinalIgnoreCase));
+                
+                // Priority 4: Any build (fallback)
+                if (newerBuild == null)
+                    newerBuild = buildsWithHighestUBR.FirstOrDefault();
 
                 if (newerBuild == null)
                     return;
@@ -266,22 +292,44 @@ namespace UUPDumpWPF
 
         private List<Build> ApplyFilters(List<Build> builds)
         {
-            return builds.Where(b =>
+            System.Diagnostics.Debug.WriteLine($"[ApplyFilters] Input builds: {builds.Count}");
+            System.Diagnostics.Debug.WriteLine($"[ApplyFilters] Retail={ChkRetail.IsChecked}, Preview={ChkPreview.IsChecked}, AMD64={ChkAmd64.IsChecked}, ARM64={ChkArm64.IsChecked}");
+            
+            var filtered = builds.Where(b =>
             {
+                // Skip builds with unknown architecture
+                if (b.Architecture == "unknown" || string.IsNullOrEmpty(b.Architecture))
+                {
+                    System.Diagnostics.Debug.WriteLine($"[ApplyFilters] SKIP (unknown arch): {b.BuildNumber} - {b.Title}");
+                    return false;
+                }
+
                 // Retail filter
                 var retailMatch = (ChkRetail.IsChecked == true && b.IsRetail) ||
                                  (ChkPreview.IsChecked == true && !b.IsRetail);
-
-                // Skip builds with unknown architecture
-                if (b.Architecture == "unknown" || string.IsNullOrEmpty(b.Architecture))
+                
+                if (!retailMatch)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[ApplyFilters] SKIP (retail mismatch): {b.BuildNumber} - {b.Title} [IsRetail={b.IsRetail}]");
                     return false;
+                }
 
                 // Architecture filter
                 var archMatch = (ChkAmd64.IsChecked == true && b.Architecture == "amd64") ||
                                (ChkArm64.IsChecked == true && b.Architecture == "arm64");
+                
+                if (!archMatch)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[ApplyFilters] SKIP (arch mismatch): {b.BuildNumber} - {b.Title} [Arch={b.Architecture}]");
+                    return false;
+                }
 
-                return retailMatch && archMatch;
+                System.Diagnostics.Debug.WriteLine($"[ApplyFilters] PASS: {b.BuildNumber} - {b.Title} [Arch={b.Architecture}, IsRetail={b.IsRetail}]");
+                return true;
             }).ToList();
+            
+            System.Diagnostics.Debug.WriteLine($"[ApplyFilters] Output builds: {filtered.Count}");
+            return filtered;
         }
 
         private async void LstBuilds_SelectionChanged(object sender, SelectionChangedEventArgs e)
