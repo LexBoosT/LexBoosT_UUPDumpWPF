@@ -1,5 +1,13 @@
 # Changelog
 
+
+## v1.6.1 - April 17, 2026
+
+### 🎯 Improvements
+- Automatically launch the program as administrator if not already running with elevated privileges, to ensure all features work correctly without manual restart.
+
+---
+
 ## v1.6 - April 14, 2026
 
 ### 🐛 Bug Fixes
